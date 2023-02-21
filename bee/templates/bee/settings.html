@@ -1,0 +1,87 @@
+{% extends 'bee/base.html' %}
+
+{% block content %}
+<div class="container shadow bg-body-tertiary rounded" style="background-color: white;">
+<form action="{% url 'bee:settings_update' %}" method="post">
+    {% csrf_token %}
+    <div class="container mt-5">
+        <br>
+        <h3>Nastavitve</h3>
+        <br>
+        <div class="mb-3 row">
+            <label for="source" class="col-sm-2 col-form-label">Vir</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="source" name="source" value="{{ source }}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="weights" class="col-sm-2 col-form-label">Uteži</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="weights" name="weights" value="{{ weights }}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="tracking_method" class="col-sm-2 col-form-label">Metoda sledenja</label>
+            <div class="col-sm-10" style="width:40%">
+                <select class="form-select" aria-label="Default select example" id="tracking_method" name="tracking_method">
+                  <option value="ocsort" {% if selected_method == 'ocsort' %}selected{% endif %}>Ocsort</option>
+                  <option value="strongsort" {% if selected_method == 'strongsort' %}selected{% endif %}>Strongsort</option>
+                  <option value="bytetrack" {% if selected_method == 'bytetrack' %}selected{% endif %}>Bytetrack</option>
+                </select>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="image_size_x" class="col-sm-2 col-form-label">Velikost slike</label>
+            <div class="col-sm-10 input-group" style="width:20%">
+                <span class="input-group-text" id="basic-addon1">X</span>
+                <input type="number" class="form-control" id="image_size_x" name="image_size_x" placeholder="Pixel" aria-label="Pixel"
+                       aria-describedby="basic-addon1" value="{{ img_size_x }}">
+            </div>
+            <div class="col-sm-10 input-group" style="width:20%">
+                <span class="input-group-text" id="basic-addon2">Y</span>
+                <input type="number" class="form-control" id="image_size_y" name="image_size_y" placeholder="Pixel" aria-label="Pixel"
+                       aria-describedby="basic-addon1" value="{{ img_size_y }}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label for="weights" class="col-sm-2 col-form-label">Začetek videoposnetka</label>
+            <div class="col-sm-10" style="width:40%">
+                <input type="datetime-local" class="form-control" id="start_time" aria-describedby="start_timeHelp" name="start_time" value="{{ start_time }}">
+                <div id="start_timeHelp" class="form-text">Potrebno samo za videoposnetke.</div>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-2 col-form-label">Procesna enota</label>
+            <div class="col-sm-10">
+                {% for device in devices %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="device" id="device{{ forloop.counter0 }}" value="{{ forloop.counter0 }}" {% if selected_device == forloop.counter0 %}checked{% endif %}>
+                      <label class="form-check-label" for="device{{ forloop.counter0 }}">{{ device }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <input type="submit" value="Posodobi" class="btn" style="background-color: #f3c622;">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                        <div style="color:red">{{ message }}</div>
+                    {% endif %}
+                    {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                        <div style="color:green">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+                <br>
+</div>
+{% endblock %}

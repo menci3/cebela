@@ -1,0 +1,49 @@
+body {
+    background-color: #fbf3a8;
+}
+
+.moj {
+    background-color: white;
+    width: 32%;
+    margin: 1% 2% 1% 1%;
+}
+
+.moj-levo {
+    background-color: white;
+    width: 62%;
+    margin: 1% 1% 1% 2%;
+}
+
+.naslov {
+    float: left;
+    font-size: 20px;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: left;
+}
+
+.fs-50 {
+    font-size: 50px;
+}
+
+.fs-20 {
+    font-size: 25px;
+}
+
+.same_row{
+    width: 9%;
+    display: inline-block;
+    margin: 0% 0.5% 0% 0.5%;
+}
+
+.napis {
+    text-align: left;
+    font-size: 20px;
+}
+
+.tracking {
+    height: auto;
+    max-height: 96%;
+    max-width: 100%;
+    margin: 1% 0 1% 0;
+}

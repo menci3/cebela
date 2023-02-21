@@ -1,0 +1,283 @@
+{% extends 'bee/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="w-100 p-3 text-center overflow-hidden">
+  <div class="row">
+
+    <div class="moj-levo shadow p-3 bg-body-tertiary rounded" style="width: 68%;">
+        <span class="naslov" id="video_title" style="width:65%">Prenos v živo</span>
+        <span style="float:right;">
+            <button class="btn" style="border: 1px #aaaaaa solid; margin: 0 0 10px 0;" id="btn_start_stream" onclick="video_start()">Start</button>
+            <button class="btn" style="border: 1px #aaaaaa solid; margin: 0 0 10px 0;" id="btn_resume_stream" onclick="video_resume()">Nadaljuj</button>
+            <button class="btn" style="border: 1px #aaaaaa solid; margin: 0 0 10px 0;" id="btn_stop_stream" onclick="video_stop()">Stop</button>
+        </span>
+
+        <img width="100%" max-height="400px" src = "{% url 'bee:video_stream' %}">
+
+        <script>
+            const video_title = document.getElementById("video_title");
+
+            const btn_video_start = document.getElementById("btn_start_stream");
+            const btn_video_resume = document.getElementById("btn_resume_stream");
+            const btn_video_stop = document.getElementById("btn_stop_stream");
+
+            let video_state = '{{video_state}}'
+            let video_type = '{{video_type}}'
+
+            if (video_type == 'file') {
+                video_title.innerHTML = 'Videoposnetek';
+            } else if (video_type == 'rtsp') {
+                video_title.innerHTML = 'Prenos v živo';
+                btn_video_resume.style.display = 'none';
+            } else if (video_type == 'unsupported') {
+                video_title.innerHTML = 'Napačen vhodni medij';
+                btn_video_start.style.display = 'none';
+                btn_video_resume.style.display = 'none';
+                btn_video_stop.style.display = 'none';
+            }
+
+            if (video_state == 'Off') {
+                off_state()
+            } else if (video_state == 'Running') {
+                running_state()
+            } else if (video_state == 'Stopped') {
+                stopped_state()
+            }
+
+            function video_start() {
+              $.post(
+                '/bee/video_start/',{
+                  csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                },
+                function (data) {
+                  running_state()
+                }
+              );
+            }
+
+            function video_resume() {
+              $.post(
+                '/bee/video_resume/',{
+                  csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                },
+                function (data) {
+                  running_state()
+                }
+              );
+            }
+
+            function video_stop() {
+              $.post(
+                '/bee/video_stop/',{
+                  csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                },
+                function (data) {
+                  stopped_state()
+                }
+              );
+            }
+
+            function off_state() {
+                btn_video_start.disabled = false
+                btn_video_resume.disabled = true
+                btn_video_stop.disabled = true
+            }
+
+            function running_state() {
+                btn_video_start.disabled = true
+                btn_video_resume.disabled = true
+                btn_video_stop.disabled = false
+            }
+
+            function stopped_state() {
+                btn_video_start.disabled = false
+                btn_video_resume.disabled = false
+                btn_video_stop.disabled = true
+            }
+        </script>
+    </div>
+
+    <div class="moj shadow p-3 bg-body-tertiary rounded" style="width: 25%;">
+        <span class="naslov">Današnje štetje</span>
+        <div class="row text-center">
+            <span class="napis">Prihod</span>
+            <hr>
+            <br>
+            <div class="col" style="margin-bottom: 12px;">
+                <span class="fs-50">{{ visit_all_sum }}</span>
+            </div>
+            <div>
+                z cvetnim prahom <span class="fs-20">{{ visit_pollen_sum }}</span>
+                <br> brez <span class="fs-20">{{ visit_sum }}</span>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <span class="napis">Odhod</span>
+            <hr>
+            <br>
+            <div class="col">
+                <span class="fs-50">{{ leave_sum }}</span>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <span class="napis">Skupna razlika</span>
+            <hr>
+            <br>
+            <span class="fs-50">{{ day_delta }}
+            </span>
+        </div>
+    </div>
+
+  </div>
+  <div class="row">
+      <div class="moj-levo shadow p-3 bg-body-tertiary rounded">
+          <span class="naslov">Današnji graf
+              <span style="float:right;">
+                  <button class="btn" style="border: 1px #aaaaaa solid;" onclick="delta()">Razlika</button>
+                  <button class="btn" style="border: 1px #aaaaaa solid;" onclick="sum()">Seštevek</button>
+              </span>
+          </span>
+          <canvas id="dailyChart" style="max-height:600px;"></canvas>
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+            let dailyChart = document.getElementById('dailyChart');
+
+            visit = {{visit}}
+            visit_pollen = {{visit_pollen}}
+            leave = {{leave}}
+            leave_pollen = {{leave_pollen}}
+
+            timestamps = {{timestamps|safe}}
+
+            hours = Array.from({ length: 24 }, (_, i) => i + 1);
+
+            sum_visits = new Array(24).fill(0);
+            sum_leaves = new Array(24).fill(0);
+            delta_visits = new Array(24).fill(0);
+            delta_visits_colors = new Array(24).fill(0);
+
+            timestamps.forEach(function (value, index) {
+              hour_index = new Date(value).getHours() - 1;
+              // bar data
+              delta_visits[hour_index] += visit[index] + visit_pollen[index] - leave[index] - leave_pollen[index];
+
+              if (delta_visits[hour_index]  > 0) {
+                delta_visits_colors[hour_index] = '#C5D4EB'
+              } else {
+                delta_visits_colors[hour_index] = '#003777'
+              }
+              // bar data 2
+              sum_visits[hour_index] += visit[index] + visit_pollen[index];
+              sum_leaves[hour_index] += leave[index] + leave_pollen[index];
+            });
+
+            bar_difference_hour = {
+              labels: hours,
+              datasets: [
+                {
+                  label: "Čebele",
+                  data: delta_visits,
+                  borderWidth: 1,
+                  borderColor: delta_visits_colors,
+                  backgroundColor: delta_visits_colors,
+                },
+              ],
+            };
+
+            bar_visit_leave = {
+              labels: hours,
+              datasets: [
+                {
+                  label: "Prihod",
+                  data: sum_visits,
+                  borderWidth: 1,
+                  borderColor: "#C5D4EB",
+                  backgroundColor: "#C5D4EB",
+                },
+                {
+                  label: "Odhod",
+                  data: sum_leaves,
+                  borderWidth: 1,
+                  borderColor: "#003777",
+                  backgroundColor: "#003777",
+                },
+              ],
+            };
+
+            let barConfig = {
+              type: "bar",
+              data: bar_difference_hour,
+              options: {
+                responsive: true,
+                interaction: {
+                  mode: "index",
+                  intersect: false,
+                },
+                stacked: false,
+                plugins: {
+                  title: {
+                    display: true,
+                    text: "Štetje",
+                  },
+                },
+                scales: {
+                  y: {
+                    type: "linear",
+                    display: true,
+                    position: "left",
+                  },
+                },
+              },
+            };
+
+            graph = new Chart(dailyChart, barConfig);
+
+            function delta() {
+              barConfig["data"] = bar_difference_hour;
+              graph.update();
+            }
+
+            function sum() {
+              barConfig["data"] = bar_visit_leave;
+              graph.update();
+            }
+          </script>
+
+      </div>
+      <div class="moj shadow p-3 bg-body-tertiary rounded">
+        <span class="naslov">
+            Trenutne nastavitve
+        </span>
+          <br><br><br>
+          <div class="mb-3">
+            <label for="source" class="form-label float-start">Vir</label>
+            <input type="text" class="form-control" id="source" placeholder="Ni nastavljeno" value="{{ source }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="weights" class="form-label float-start">Uteži</label>
+            <input type="text" class="form-control" id="weights" placeholder="Ni nastavljeno" value="{{ weights }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="tracking_method" class="form-label float-start">Metoda sledenja</label>
+            <input type="text" class="form-control" id="tracking_method" placeholder="Ni nastavljeno" value="{{ tracking_method }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="device" class="form-label float-start">Procesna enota</label>
+            <input type="text" class="form-control" id="device" placeholder="Ni nastavljeno" value="{{ device }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="img_size_x" class="form-label float-start">Širina slike</label>
+            <input type="text" class="form-control" id="img_size_x" placeholder="Ni nastavljeno" value="{{ img_size_x }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label for="img_size_y" class="form-label float-start">Višina slike</label>
+            <input type="text" class="form-control" id="img_size_y" placeholder="Ni nastavljeno" value="{{ img_size_y }}" disabled>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

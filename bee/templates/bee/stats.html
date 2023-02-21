@@ -1,0 +1,108 @@
+{% extends 'bee/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="w-100 p-3 overflow-hidden">
+  <div class="row">
+    <div class="moj-levo shadow p-3 bg-body-tertiary rounded" style="background-color:white; width:96%;">
+      <button class="btn same_row" style="border: 1px #aaaaaa solid;" id="dan" onclick="show_day()">Dan</button>
+      <button class="btn same_row" style="border: 1px #aaaaaa solid;" id="mesec" onclick="show_month()">Mesec</button>
+      <button class="btn same_row" style="border: 1px #aaaaaa solid;" id="leto" onclick="show_year()">Leto</button>
+
+      <form action="/bee/stats/" method="get" class="same_row" id="search" style="width: 57%; padding: 0px;">
+          <input type="hidden" id="view" name="view" value="date"/>
+          <input type="date" name="date" class="form-control" id="date">
+          <input type="month" name="date" class="form-control" id="month" disabled hidden>
+          <input type="number" name="date" class="form-control" id="year" disabled hidden>
+      </form>
+      <button type="submit" form="search" class="btn same_row" style="background-color: #f3c622;">Prikaži</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="moj-levo shadow p-3 bg-body-tertiary rounded">
+      <canvas id="barChart" style="max-height: 600px;"></canvas>
+      <br>
+      <button class="btn" style="border: 1px #aaaaaa solid;" onclick="difference()">Razlika</button>
+      <button class="btn" style="border: 1px #aaaaaa solid;" onclick="total()">Seštevek</button>
+    </div>
+    <div class="moj shadow p-3 bg-body-tertiary rounded">
+        <canvas id="pieChart" style="max-height: 600px;"></canvas>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="moj-levo shadow p-3 bg-body-tertiary rounded" style="width:96%">
+      <canvas id="areaChart" style="max-height: 600px; height: 500px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  visit = {{visit}}
+  visit_pollen = {{visit_pollen}}
+  leave = {{leave}}
+  leave_pollen = {{leave_pollen}}
+  
+  timestamps = {{timestamps|safe}}
+
+  view = '{{view}}'
+
+  const day = document.getElementById("date");
+  const month = document.getElementById("month");
+  const year = document.getElementById("year");
+
+  const view_input = document.getElementById("view");
+
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const urlDate = urlParams.get('date')
+
+  if (view == 'date'){
+    show_day()
+    day.value = urlDate
+  } else if (view == 'month'){
+    show_month()
+    month.value = urlDate
+  } else if (view == 'year'){
+    show_year()
+    year.value = urlDate
+  }
+
+  function show_day(){
+    day.disabled = false
+    day.hidden = false
+    month.disabled = true
+    month.hidden = true
+    year.disabled = true
+    year.hidden = true
+    view_input.value = 'date'
+  }
+
+  function show_month(){
+    day.disabled = true
+    day.hidden = true
+    month.disabled = false
+    month.hidden = false
+    year.disabled = true
+    year.hidden = true
+    view_input.value = 'month'
+  }
+
+  function show_year(){
+    day.disabled = true
+    day.hidden = true
+    month.disabled = true
+    month.hidden = true
+    year.disabled = false
+    year.hidden = false
+    view_input.value = 'year'
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="{% static 'bee/script.js' %}"></script>
+
+{% endblock %}
