@@ -167,7 +167,7 @@ def index(request):
     today = datetime.now(cet)
     today_start = datetime.combine(today.date(), datetime.min.time(), today.tzinfo)
 
-    detections = Detections.objects.filter(date__gte=today_start - timedelta(days=11))
+    detections = Detections.objects.filter(date__gte=today_start)
 
     visit_sum = 0
     visit_pollen_sum = 0
